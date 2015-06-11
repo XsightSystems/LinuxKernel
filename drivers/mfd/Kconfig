@@ -764,6 +764,16 @@ config MFD_RTSX_USB
 	  Realtek card reader supports access to many types of memory cards,
 	  such as Memory Stick Pro, Secure Digital and MultiMediaCard.
 
+config MFD_CONGATEC_CGEB
+	tristate "Support for the Congatec CGEB BIOS interface"
+	depends on X86_32
+	help
+	  The Congatec CGEB BIOS interface provides access to onboard
+	  peripherals like I2C busses and watchdogs. additional drivers must be
+	  enabled in order to use the functionality of the device.
+	  Say y or m here if you are using a congatec module with CGEB interface,
+	  otherwise say n.
+
 config MFD_RC5T583
 	bool "Ricoh RC5T583 Power Management system device"
 	depends on I2C=y
