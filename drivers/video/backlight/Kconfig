@@ -460,6 +460,13 @@ config BACKLIGHT_BD6107
 	help
 	  If you have a Rohm BD6107 say Y to enable the backlight driver.
 
+config BACKLIGHT_CONGATEC_CGEB
+	tristate "Congatec CGEB Backlight driver"
+	depends on MFD_CONGATEC_CGEB
+	help
+	  This driver provides support for the backlight accssable via
+	  the Congatec CGEB interface found on Congatec boards.
+
 endif # BACKLIGHT_CLASS_DEVICE
 
 endif # BACKLIGHT_LCD_SUPPORT
