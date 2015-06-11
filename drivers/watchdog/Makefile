@@ -176,6 +176,9 @@ obj-$(CONFIG_SH_WDT) += shwdt.o
 obj-$(CONFIG_WATCHDOG_RIO)		+= riowd.o
 obj-$(CONFIG_WATCHDOG_CP1XXX)		+= cpwd.o
 
+# X86 Architecture
+obj-$(CONFIG_CONGATEC_CGEB_WATCHDOG) += congatec_cgeb_watchdog.o
+
 # XTENSA Architecture
 
 # Xen
