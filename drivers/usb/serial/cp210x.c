@@ -335,7 +335,7 @@ static int cp210x_get_config(struct usb_serial_port *port, u8 request,
 	kfree(buf);
 
 	if (result != size) {
-		dev_dbg(&port->dev, "%s - Unable to send config request, request=0x%x size=%d result=%d\n",
+		dev_warn(&port->dev, "%s - Unable to send config request, request=0x%x size=%d result=%d\n",
 			__func__, request, size, result);
 		if (result > 0)
 			result = -EPROTO;
@@ -388,8 +388,9 @@ static int cp210x_set_config(struct usb_serial_port *port, u8 request,
 	kfree(buf);
 
 	if ((size > 2 && result != size) || result < 0) {
-		dev_dbg(&port->dev, "%s - Unable to send request, request=0x%x size=%d result=%d\n",
+		dev_warn(&port->dev, "%s - Unable to send request, request=0x%x size=%d result=%d\n",
 			__func__, request, size, result);
+
 		if (result > 0)
 			result = -EPROTO;
 
@@ -512,6 +513,7 @@ static void cp210x_get_termios_port(struct usb_serial_port *port,
 	unsigned int cflag, modem_ctl[4];
 	unsigned int baud;
 	unsigned int bits;
+	bool setcfg = false;
 
 	cp210x_get_config(port, CP210X_GET_BAUDRATE, &baud, 4);
 
@@ -544,14 +546,14 @@ static void cp210x_get_termios_port(struct usb_serial_port *port,
 		cflag |= CS8;
 		bits &= ~BITS_DATA_MASK;
 		bits |= BITS_DATA_8;
-		cp210x_set_config(port, CP210X_SET_LINE_CTL, &bits, 2);
+		setcfg = true;
 		break;
 	default:
 		dev_dbg(dev, "%s - Unknown number of data bits, using 8\n", __func__);
 		cflag |= CS8;
 		bits &= ~BITS_DATA_MASK;
 		bits |= BITS_DATA_8;
-		cp210x_set_config(port, CP210X_SET_LINE_CTL, &bits, 2);
+		setcfg = true;
 		break;
 	}
 
@@ -582,7 +584,7 @@ static void cp210x_get_termios_port(struct usb_serial_port *port,
 		dev_dbg(dev, "%s - Unknown parity mode, disabling parity\n", __func__);
 		cflag &= ~PARENB;
 		bits &= ~BITS_PARITY_MASK;
-		cp210x_set_config(port, CP210X_SET_LINE_CTL, &bits, 2);
+		setcfg = true;
 		break;
 	}
 
@@ -594,7 +596,7 @@ static void cp210x_get_termios_port(struct usb_serial_port *port,
 	case BITS_STOP_1_5:
 		dev_dbg(dev, "%s - stop bits = 1.5 (not supported, using 1 stop bit)\n", __func__);
 		bits &= ~BITS_STOP_MASK;
-		cp210x_set_config(port, CP210X_SET_LINE_CTL, &bits, 2);
+		setcfg = true;
 		break;
 	case BITS_STOP_2:
 		dev_dbg(dev, "%s - stop bits = 2\n", __func__);
@@ -603,9 +605,12 @@ static void cp210x_get_termios_port(struct usb_serial_port *port,
 	default:
 		dev_dbg(dev, "%s - Unknown number of stop bits, using 1 stop bit\n", __func__);
 		bits &= ~BITS_STOP_MASK;
-		cp210x_set_config(port, CP210X_SET_LINE_CTL, &bits, 2);
+		setcfg = true;
 		break;
 	}
+
+	if (setcfg)
+		cp210x_set_config(port, CP210X_SET_LINE_CTL, &bits, 2);
 
 	cp210x_get_config(port, CP210X_GET_FLOW, modem_ctl, 16);
 	if (modem_ctl[0] & 0x0008) {
@@ -709,7 +714,7 @@ static void cp210x_set_termios(struct tty_struct *tty,
 			break;
 		/*case CS9:
 			bits |= BITS_DATA_9;
-			dev_dbg(dev, "%s - data bits = 9\n", __func__);
+			dev_warn(dev, "%s - data bits = 9\n", __func__);
 			break;*/
 		default:
 			dev_dbg(dev, "cp210x driver does not support the number of bits requested, using 8 bit mode\n");
@@ -717,7 +722,7 @@ static void cp210x_set_termios(struct tty_struct *tty,
 			break;
 		}
 		if (cp210x_set_config(port, CP210X_SET_LINE_CTL, &bits, 2))
-			dev_dbg(dev, "Number of data bits requested not supported by device\n");
+			dev_warn(dev, "Number of data bits requested not supported by device\n");
 	}
 
 	if ((cflag     & (PARENB|PARODD|CMSPAR)) !=
@@ -744,7 +749,7 @@ static void cp210x_set_termios(struct tty_struct *tty,
 			}
 		}
 		if (cp210x_set_config(port, CP210X_SET_LINE_CTL, &bits, 2))
-			dev_dbg(dev, "Parity mode not supported by device\n");
+			dev_warn(dev, "Parity mode not supported by device\n");
 	}
 
 	if ((cflag & CSTOPB) != (old_cflag & CSTOPB)) {
@@ -758,7 +763,7 @@ static void cp210x_set_termios(struct tty_struct *tty,
 			dev_dbg(dev, "%s - stop bits = 1\n", __func__);
 		}
 		if (cp210x_set_config(port, CP210X_SET_LINE_CTL, &bits, 2))
-			dev_dbg(dev, "Number of stop bits requested not supported by device\n");
+			dev_warn(dev, "Number of stop bits requested not supported by device\n");
 	}
 
 	if ((cflag & CRTSCTS) != (old_cflag & CRTSCTS)) {
