@@ -2165,6 +2165,7 @@ static ssize_t n_tty_read(struct tty_struct *tty, struct file *file,
 	long timeout;
 	int packet;
 	size_t tail;
+  int time_res = 10;
 
 	c = job_control(tty, file);
 	if (c < 0)
@@ -2185,17 +2186,21 @@ static ssize_t n_tty_read(struct tty_struct *tty, struct file *file,
 
 	minimum = time = 0;
 	timeout = MAX_SCHEDULE_TIMEOUT;
+	if (TIMERES_CHAR(tty))
+	{
+		time_res = 1000;
+	}
 	if (!ldata->icanon) {
 		minimum = MIN_CHAR(tty);
 		if (minimum) {
-			time = (HZ / 10) * TIME_CHAR(tty);
+			time = (HZ / time_res) * TIME_CHAR(tty);
 			if (time)
 				ldata->minimum_to_wake = 1;
 			else if (!waitqueue_active(&tty->read_wait) ||
 				 (ldata->minimum_to_wake > minimum))
 				ldata->minimum_to_wake = minimum;
 		} else {
-			timeout = (HZ / 10) * TIME_CHAR(tty);
+			timeout = (HZ / time_res) * TIME_CHAR(tty);
 			ldata->minimum_to_wake = minimum = 1;
 		}
 	}
