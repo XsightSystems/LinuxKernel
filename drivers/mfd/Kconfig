@@ -766,7 +766,7 @@ config MFD_RTSX_USB
 
 config MFD_CONGATEC_CGEB
 	tristate "Support for the Congatec CGEB BIOS interface"
-	depends on X86_32
+	depends on X86
 	help
 	  The Congatec CGEB BIOS interface provides access to onboard
 	  peripherals like I2C busses and watchdogs. additional drivers must be
